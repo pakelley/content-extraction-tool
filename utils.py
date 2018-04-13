@@ -19,39 +19,41 @@ def read_dragnet_data(data_dir, to_extract='content'):
     'fileroot', 'doc', 'labels', 'weights', and 'tokens' for each document
     """
     # read data
-    filenames = [re.sub(r'\.html', '', fname) 
+    filenames = [re.sub(r'\.html', '', fname)
                  for fname in list(get_filenames(os.path.join(data_dir, 'HTML')))]
     extract_all_gold_standard_data(data_dir)
     # split data
     data = prepare_all_data(data_dir)
     train_data_fnames, test_data_fnames = train_test_split(list(zip(data, filenames)))
-    train_data = [item[0] for item in train_data_fnames]
-    train_filenames = [item[1] for item in train_data_fnames]
-    test_data = [item[0] for item in test_data_fnames]
-    test_filanames = [item[1] for item in test_data_fnames]
+    del data
     # parse data
-    tmp_extractor = Extractor(to_extract=to_extract)
-    train_docs, train_labels, train_weights = tmp_extractor.get_html_labels_weights(train_data)
-    test_docs, test_labels, test_weights = tmp_extractor.get_html_labels_weights(test_data)
-    train_tokens = get_gs_tokens(train_data, tmp_extractor.to_extract)
-    test_tokens = get_gs_tokens(test_data, tmp_extractor.to_extract)
+    test_df = make_dragnet_df(test_data_fnames, 'content')
+    del test_data_fnames
+    train_df = make_dragnet_df(train_data_fnames, 'content')
+    del train_data_fnames
 
-    train_df = pd.DataFrame({
-        'filename': train_filenames,
-        'doc': train_docs,
-        'labels': train_labels,
-        'weights': train_weights,
-        'tokens': train_tokens
-    })
-    test_df = pd.DataFrame({
-        'filename': test_filanames,
-        'doc': test_docs,
-        'labels': test_labels,
-        'weights': test_weights,
-        'tokens': test_tokens
-    })
     return train_df, test_df
 
+def make_dragnet_df(data_and_filenames, to_extract):
+    data = [item[0] for item in data_and_filenames]
+    filenames = [item[1] for item in data_and_filenames]
+    tmp_extractor = Extractor(to_extract=to_extract)
+    del data_and_filenames
+    docs = [item[0] for item in data]
+    labels_weights = [tmp_extractor._get_labels_and_weights(item[1], item[2]) for item in data]
+    labels = [item[0] for item in labels_weights]
+    weights = [item[1] for item in labels_weights]
+    tokens = get_gs_tokens(data, tmp_extractor.to_extract)
+    del data
+    del labels_weights
+
+    return pd.DataFrame({
+        'filename': filenames,
+        'doc': docs,
+        'labels': labels,
+        'weights': weights,
+        'tokens': tokens
+    })
 
 def get_gs_content(extractor, doc, labels):
     """util to get labeled content from a doc"""
@@ -70,7 +72,7 @@ def get_gs_tokens(dataset, to_extract):
     else:
         print('Invalid value for `to_extract`')
         return None
-    
+
 def score_dragnet(predicted, expected, weights):
     """util to get score, but return 1's for correctly predicting no content"""
     if len(expected) > 0 and len(predicted) > 0:
