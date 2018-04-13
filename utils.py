@@ -88,16 +88,16 @@ def extraction_comparison(base_ext, comp_ext, df, npartitions=1):
     comp_content = [comp_ext.extract(x) for x in tqdm(df['doc'], desc='Extracting Justext Content')]
     expected_content = [get_gs_content(base_ext, x, label) for x, label in 
                         tqdm(zip(df['doc'], df['labels']), total=len(df['doc']), desc='Parsing Expected Content')]
-    
+
     base_tokens = [tokenizer(c) for c in base_content]
     comp_tokens = [tokenizer(c) for c in comp_content]
     expected_tokens = [tokenizer(c) for c in expected_content]
-    
+
     base_scores = [score_dragnet(predicted, expected, weight)
                    for predicted, expected, weight in zip(base_tokens, expected_tokens, df['weights'])]
     comp_scores = [score_dragnet(predicted, expected, weight)
                    for predicted, expected, weight in zip(comp_tokens, expected_tokens, df['weights'])]
-    
+
     return pd.DataFrame({
         'fileroot': df['filename'],
         'test_data': df['doc'],
@@ -148,28 +148,29 @@ def content_extract_comparison_widget(df):
     # build error mode labels
     if 'error_modes' not in df.columns:
         df['error_modes'] = pd.Series([''] * len(df.index), index=df.index)
-        
+
     em_text = widgets.Text(df['error_modes'].iloc[slider.value])
-    
+
     def update_em(*args):
         df['error_modes'].iloc[slider.value] = em_text.value
     em_text.observe(update_em, 'value')
-    
+
     def update_text(*args):
         em_text.value = df['error_modes'].iloc[slider.value]
     slider.observe(update_text, 'value')
-    
+
     # make content entry field
-    content_text = widgets.Textarea(df['labeled_content'].iloc[slider.value])
-    
+    content_text = widgets.Textarea(df['labeled_content'].iloc[slider.value],
+                                    layout=widgets.Layout(width='auto'))
+
     def update_content(*args):
         df['labeled_content'].iloc[slider.value] = content_text.value
     content_text.observe(update_content, 'value')
-    
+
     def update_content_text(*args):
         content_text.value = df['labeled_content'].iloc[slider.value]
     slider.observe(update_content_text, 'value')
-    
+
     # collect into tabs
     tab_nest = widgets.Tab()
     tab_nest.children = [accordion, html_view, content_text]
@@ -182,7 +183,7 @@ def content_extract_comparison_widget(df):
 
 
 class JustextWrapper():
-    
+
     def extract(self, html_content):
         stripped_content = re.sub('\s+', ' ', html_content.strip())
         if stripped_content:
