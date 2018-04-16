@@ -171,6 +171,13 @@ def content_extract_comparison_widget(df):
         display(HTML(clean_html_str))
     html_view = widgets.interactive_output(show_html, {'df':widgets.fixed(df), 'idx':slider})
 
+    # make file label
+    file_label = widgets.Label(df['fileroot'].iloc[slider.value])
+
+    def update_file_label(*args):
+        file_label.value = df['fileroot'].iloc[slider.value]
+    slider.observe(update_file_label, 'value')
+
     # build error mode labels
     if 'error_modes' not in df.columns:
         df['error_modes'] = pd.Series([''] * len(df.index), index=df.index)
@@ -205,7 +212,7 @@ def content_extract_comparison_widget(df):
     tab_nest.set_title(2, 'Label Content')
 
     # final display
-    return widgets.VBox([widgets.HBox([slider, widgets.Label('Error Mode:'), em_text]), tab_nest])
+    return widgets.VBox([widgets.HBox([file_label, slider, widgets.Label('Error Mode:'), em_text]), tab_nest])
 
 
 class JustextWrapper():
