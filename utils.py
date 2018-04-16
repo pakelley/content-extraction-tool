@@ -1,5 +1,6 @@
 import os
 import re
+import lxml
 import pandas as pd
 from tqdm import tqdm
 import ipywidgets as widgets
@@ -11,6 +12,28 @@ from dragnet.compat import train_test_split
 from dragnet.data_processing import prepare_all_data, extract_all_gold_standard_data, get_filenames
 from dragnet.util import evaluation_metrics
 import justext
+
+def init_cleaner():
+    cleaner = lxml.html.clean.Cleaner()
+
+    cleaner.add_nofollow = True
+    # cleaner.scripts = False
+    # cleaner.javascript = False
+    cleaner.comments = False
+    cleaner.style = False
+    cleaner.inline_style = False
+    cleaner.embedded = False
+    cleaner.forms = False
+    cleaner.frames = False
+    cleaner.annoying_tags = False
+    cleaner.links = False
+    cleaner.meta = False
+    cleaner.page_structure = False
+    cleaner.processing_instructions = False
+    cleaner.remove_unknown_tags = False
+    cleaner.safe_attrs_only = False
+
+    return cleaner
 
 def read_dragnet_data(data_dir, to_extract='content'):
     """
@@ -141,8 +164,11 @@ def content_extract_comparison_widget(df):
     accordion.set_title(2, 'Justext')
 
     # build HTML view
+    cleaner = init_cleaner()
     def show_html(df, idx):
-        display(HTML(df['test_data'].iloc[idx]))
+        html_str = df['test_data'].iloc[idx]
+        clean_html_str = cleaner.clean_html(html_str)
+        display(HTML(clean_html_str))
     html_view = widgets.interactive_output(show_html, {'df':widgets.fixed(df), 'idx':slider})
 
     # build error mode labels
