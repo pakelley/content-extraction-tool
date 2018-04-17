@@ -2,7 +2,7 @@ import os
 import re
 import lxml
 import pandas as pd
-from tqdm import tqdm
+from tqdm import tqdm_notebook as tqdm
 import ipywidgets as widgets
 from IPython.display import HTML, display
 
@@ -102,10 +102,10 @@ def score_dragnet(predicted, expected, weights):
 
 def extraction_comparison(base_ext, comp_ext, df, npartitions=1):
     """returns a dataframe containing info from each step of extraction"""
-    base_content = [base_ext.extract(x) for x in tqdm(df['doc'], desc='Extracting Dragnet Content')]
-    comp_content = [comp_ext.extract(x) for x in tqdm(df['doc'], desc='Extracting Justext Content')]
+    base_content = [base_ext.extract(x) for x in tqdm(df['doc'], desc='Extracting Dragnet Content', leave=False)]
+    comp_content = [comp_ext.extract(x) for x in tqdm(df['doc'], desc='Extracting Justext Content', leave=False)]
     expected_content = [get_gs_content(base_ext, x, label) for x, label in 
-                        tqdm(zip(df['doc'], df['labels']), total=len(df['doc']), desc='Parsing Expected Content')]
+                        tqdm(zip(df['doc'], df['labels']), total=len(df['doc']), desc='Parsing Expected Content', leave=False)]
 
     base_tokens = [tokenizer(c) for c in base_content]
     comp_tokens = [tokenizer(c) for c in comp_content]
@@ -131,8 +131,6 @@ def extraction_comparison(base_ext, comp_ext, df, npartitions=1):
         'base_f1': [score[2] for score in base_scores],
         'comp_f1': [score[2] for score in comp_scores]
     })
-
-
 def content_extract_comparison_widget(df):
     """creates a widget for analyzing content extraction"""
     def print_expected(df, idx):
