@@ -143,6 +143,9 @@ def content_extract_comparison_widget(df):
     def print_justext(df, idx):
         print('f1: ', df['comp_f1'].iloc[idx])
         print(df['comp_content'].iloc[idx])
+        
+    def print_raw_html(df, idx):
+        print(df['test_data'].iloc[idx])
 
     slider = widgets.IntSlider(min=0, max=df.count()['base_content']-1, step=1, value=0, continuous_update=False)
 
@@ -162,7 +165,9 @@ def content_extract_comparison_widget(df):
         html_str = df['test_data'].iloc[idx]
         clean_html_str = cleaner.clean_html(html_str)
         display(HTML(clean_html_str))
-    html_view = widgets.interactive_output(show_html, {'df':widgets.fixed(df), 'idx':slider})
+    html_view = widgets.interactive_output(show_html, {'df': widgets.fixed(df), 'idx': slider})
+    
+    raw_html_view = widgets.interactive_output(print_raw_html, {'df': widgets.fixed(df), 'idx': slider})
 
     # make file label
     file_label = widgets.Label(df['fileroot'].iloc[slider.value])
@@ -176,7 +181,6 @@ def content_extract_comparison_widget(df):
         df['error_modes'] = pd.Series([''] * len(df.index), index=df.index)
 
     em_text = widgets.Text(df['error_modes'].iloc[slider.value])
-
     def update_em(*args):
         df['error_modes'].iloc[slider.value] = em_text.value
     em_text.observe(update_em, 'value')
@@ -199,10 +203,11 @@ def content_extract_comparison_widget(df):
 
     # collect into tabs
     tab_nest = widgets.Tab()
-    tab_nest.children = [accordion, html_view, content_text]
+    tab_nest.children = [accordion, html_view, raw_html_view, content_text]
     tab_nest.set_title(0, 'Extracted Content')
-    tab_nest.set_title(1, 'HTML')
-    tab_nest.set_title(2, 'Label Content')
+    tab_nest.set_title(1, 'Rendered HTML')
+    tab_nest.set_title(2, 'Raw HTML')
+    tab_nest.set_title(3, 'Label Content')
 
     # final display
     return widgets.VBox([widgets.HBox([file_label, slider, widgets.Label('Error Mode:'), em_text]), tab_nest])
