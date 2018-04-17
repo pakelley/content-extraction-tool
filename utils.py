@@ -45,17 +45,12 @@ def read_dragnet_data(data_dir, to_extract='content'):
     filenames = [re.sub(r'\.html', '', fname)
                  for fname in list(get_filenames(os.path.join(data_dir, 'HTML')))]
     extract_all_gold_standard_data(data_dir)
-    # split data
     data = prepare_all_data(data_dir)
-    train_data_fnames, test_data_fnames = train_test_split(list(zip(data, filenames)))
-    del data
     # parse data
-    test_df = make_dragnet_df(test_data_fnames, 'content')
-    del test_data_fnames
-    train_df = make_dragnet_df(train_data_fnames, 'content')
-    del train_data_fnames
+    full_df = make_dragnet_df(list(zip(data, filenames)), 'content')
+    del data
 
-    return train_df, test_df
+    return full_df
 
 def make_dragnet_df(data_and_filenames, to_extract):
     data = [item[0] for item in data_and_filenames]
