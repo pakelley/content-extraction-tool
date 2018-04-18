@@ -167,7 +167,7 @@ class FancySlider(widgets.HBox):
 
     def update_slider(self, *args):
         if self.textbox.value is not '':
-        self.value = int(self.textbox.value)
+            self.value = int(self.textbox.value)
 
     def update_textbox(self, *args):
         self.textbox.value = str(self.value)
